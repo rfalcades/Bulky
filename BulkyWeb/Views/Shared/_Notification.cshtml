@@ -3,7 +3,14 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
 
-    <script type="text/javascript">    
+    <script type="text/javascript">
+
+        toastr.options = {
+           "timeOut": "2000",
+           "positionClass": "toast-top-center",
+           "progressBar": true
+        };
+
         toastr.success('@TempData["message"]');
     </script>
 }
