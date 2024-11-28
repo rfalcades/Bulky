@@ -2,7 +2,9 @@
 using Bulky.DataAccess.Repository;
 using Bulky.DataAccess.Repository.IRepository;
 using Bulky.Models;
+using Bulky.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BulkyWeb.Areas.Admin.Controllers
 {
@@ -16,29 +18,58 @@ namespace BulkyWeb.Areas.Admin.Controllers
         }
         public IActionResult Index()
         {
-            var categories = unitOfWork.Product.GetAll().ToList();
+            var products = unitOfWork.Product.GetAll().ToList();
 
-            return View(categories);
+            return View(products);
         }
 
-        public IActionResult Create()
+        public IActionResult Upsert(int? id)
         {
-            return View();
+            ProductViewModel vm = new ProductViewModel
+            {
+                CategoryList = unitOfWork.Category.GetAll().Select(i => new SelectListItem
+                {
+                    Text = i.Name,
+                    Value = i.Id.ToString()
+                }),
+                Product = new Product()
+            };
+
+            if (id == null || id == 0)
+            {
+                return View(vm);
+            }
+            else 
+            {
+                // update
+                vm.Product = unitOfWork.Product.Get(_ => _.Id == id);
+                return View(vm);
+            }
+
+            //return View(vm);
         }
 
 
         [HttpPost]
-        public IActionResult Create(Product Product)
+        public IActionResult Upsert(ProductViewModel vm, IFormFile? file)
         {
             if (ModelState.IsValid)
             {
-                unitOfWork.Product.Add(Product);
+                unitOfWork.Product.Add(vm.Product);
                 unitOfWork.Save();
                 TempData["message"] = "Product has been created successfully";
                 return RedirectToAction("Index");
             }
+            else
+            {
+                vm.CategoryList = unitOfWork.Category.GetAll().Select(i => new SelectListItem
+                {
+                    Text = i.Name,
+                    Value = i.Id.ToString()
+                });
+            }
 
-            return View(Product);
+            return View(vm);
         }
 
 
