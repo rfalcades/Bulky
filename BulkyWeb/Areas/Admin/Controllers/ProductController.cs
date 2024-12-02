@@ -20,7 +20,7 @@ namespace BulkyWeb.Areas.Admin.Controllers
         }
         public IActionResult Index()
         {
-            var products = unitOfWork.Product.GetAll().ToList();
+            var products = unitOfWork.Product.GetAll(includeProperties:"Category").ToList();
 
             return View(products);
         }
@@ -65,15 +65,31 @@ namespace BulkyWeb.Areas.Admin.Controllers
                     string fileName = Guid.NewGuid() + "_" + file.FileName;
                     string productPath = Path.Combine(wwwRootPath, subPath);
 
+                    if (!string.IsNullOrEmpty(vm.Product.ImageUrl))
+                    {
+                        var oldImagePath = Path.Combine(wwwRootPath, vm.Product.ImageUrl.TrimStart('\\'));
+                        
+                        if (System.IO.File.Exists(oldImagePath))
+                            System.IO.File.Delete(oldImagePath);
+                    }
+
                     using (var fileStream = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
                     {
                         file.CopyTo(fileStream);
                     }
-                    
-                    vm.Product.ImageUrl = subPath + fileName;
+
+                    vm.Product.ImageUrl = Path.Combine("\\", subPath, fileName);
                 }
 
-                unitOfWork.Product.Add(vm.Product);
+                if (vm.Product.Id == 0)
+                {
+                    unitOfWork.Product.Add(vm.Product);
+                }
+                else
+                {
+                    unitOfWork.Product.Update(vm.Product);
+                }
+                
                 unitOfWork.Save();
                 TempData["message"] = "Product has been created successfully";
                 return RedirectToAction("Index");
