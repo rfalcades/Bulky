@@ -12,9 +12,11 @@ namespace BulkyWeb.Areas.Admin.Controllers
     public class ProductController : Controller
     {
         private readonly IUnitOfWork unitOfWork;
-        public ProductController(IUnitOfWork unitOfWork)
+        private readonly IWebHostEnvironment webHostEnvironment;
+        public ProductController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             this.unitOfWork = unitOfWork;
+            this.webHostEnvironment = webHostEnvironment;
         }
         public IActionResult Index()
         {
@@ -55,6 +57,22 @@ namespace BulkyWeb.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
+                string wwwRootPath = webHostEnvironment.WebRootPath;
+                const string subPath = @"images\product";
+
+                if (file != null)
+                {
+                    string fileName = Guid.NewGuid() + "_" + file.FileName;
+                    string productPath = Path.Combine(wwwRootPath, subPath);
+
+                    using (var fileStream = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
+                    {
+                        file.CopyTo(fileStream);
+                    }
+                    
+                    vm.Product.ImageUrl = subPath + fileName;
+                }
+
                 unitOfWork.Product.Add(vm.Product);
                 unitOfWork.Save();
                 TempData["message"] = "Product has been created successfully";
