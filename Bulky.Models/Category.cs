@@ -16,5 +16,9 @@ namespace Bulky.Models
         [DisplayName("Display Order")]
         [Range(1, 100, ErrorMessage = "Display Order for category must be greater than 0 and less than 100")]
         public int DisplayOrder { get; set; }
+
+        [DisplayName("Created Date")]
+        public DateTime CreatedAt { get; set; }
+        
     }
 }
